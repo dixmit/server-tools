@@ -4,7 +4,6 @@
 
 from odoo import SUPERUSER_ID, api, models
 from odoo.exceptions import AccessDenied
-from odoo.tools import config
 
 
 class ResUsers(models.Model):
@@ -15,9 +14,7 @@ class ResUsers(models.Model):
         """Force a method to raise an AccessDenied on falsey return."""
         with cls.pool.cursor() as cr:
             env = api.Environment(cr, SUPERUSER_ID, {})
-            remote = env["res.users"].remote
-            if not config["test_enable"]:
-                remote.ensure_one()
+            env["res.users"].remote
         result = method()
         if not result:
             # Force exception to record auth failure
