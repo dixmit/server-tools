@@ -6,7 +6,6 @@ from odoo import api, fields, models
 
 class ExceptionRule(models.Model):
     _inherit = "exception.rule"
-    _name = "exception.rule"
 
     method = fields.Selection(
         selection_add=[("exception_method_no_zip", "Purchase exception no zip")]
@@ -15,7 +14,6 @@ class ExceptionRule(models.Model):
         selection_add=[("base.exception.test.purchase", "Purchase Test")],
         ondelete={"base.exception.test.purchase": "cascade"},
     )
-    test_purchase_ids = fields.Many2many("base.exception.test.purchase")
 
 
 class PurchaseTest(models.Model):
@@ -23,7 +21,7 @@ class PurchaseTest(models.Model):
     _name = "base.exception.test.purchase"
     _description = "Base Exception Test Model"
 
-    name = fields.Char(required=True)
+    name = fields.Char()
     user_id = fields.Many2one("res.users", string="Responsible")
     state = fields.Selection(
         [
