@@ -14,6 +14,7 @@ class ExceptionRule(models.Model):
         selection_add=[("base.exception.test.purchase", "Purchase Test")],
         ondelete={"base.exception.test.purchase": "cascade"},
     )
+    test_purchase_ids = fields.Many2many("base.exception.test.purchase")
 
 
 class PurchaseTest(models.Model):

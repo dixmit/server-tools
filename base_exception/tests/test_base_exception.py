@@ -5,14 +5,13 @@
 from odoo.exceptions import UserError, ValidationError
 from odoo.orm.model_classes import add_to_registry
 from odoo.tests import TransactionCase
-from odoo.tools import mute_logger
 
 
 class TestBaseException(TransactionCase):
     @classmethod
-    @mute_logger("odoo.registry")
     def setUpClass(cls):
         super().setUpClass()
+        cls.originExceptionRuleClasses = cls.registry["exception.rule"]._base_classes__
 
         from . import purchase_test
 
@@ -23,19 +22,18 @@ class TestBaseException(TransactionCase):
             purchase_test.WizardTest,
         ]:
             add_to_registry(cls.registry, model_class)
-
         test_models = [
             "base.exception.test.purchase.line",
             "base.exception.test.purchase",
             "exception.rule.confirm.test.purchase",
         ]
+        cls.registry._setup_models__(cls.env.cr, test_models + ["exception.rule"])
+        cls.registry.init_models(
+            cls.env.cr, test_models + ["exception.rule"], {"models_to_check": True}
+        )
         for model_name in test_models:
-            cls.registry._setup_models__(cls.env.cr, [model_name])
-            cls.registry.init_models(
-                cls.env.cr, [model_name], {"models_to_check": True}
-            )
             cls.addClassCleanup(cls.registry.__delitem__, model_name)
-
+        cls.addClassCleanup(cls.restore_exception_rule)
         cls.partner = cls.env["res.partner"].create({"name": "Foo"})
         cls.po = cls.env["base.exception.test.purchase"].create(
             {
@@ -64,6 +62,11 @@ class TestBaseException(TransactionCase):
                 "ignore": False,
             }
         )
+
+    @classmethod
+    def restore_exception_rule(cls):
+        cls.registry["exception.rule"]._fields__.pop("test_purchase_ids", None)
+        cls.registry["exception.rule"]._base_classes__ = cls.originExceptionRuleClasses
 
     def test_valid(self):
         self.partner.write({"zip": "00000"})
